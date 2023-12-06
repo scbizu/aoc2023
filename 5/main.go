@@ -28,14 +28,20 @@ type rangeAlmanac struct {
 	almanacFn
 }
 
-func (ra *rangeAlmanac) AddSeeds(line string) {
-	seedsString := strings.TrimPrefix(line, "seeds: ")
-	ss, err := splitString2Int64(seedsString, " ")
-	if err != nil {
-		panic(err)
-	}
+func (ra *rangeAlmanac) reset() {
+	ra.seeds = []i64Vec{}
+	ra.soils = []i64Vec{}
+	ra.ferts = []i64Vec{}
+	ra.waters = []i64Vec{}
+	ra.lights = []i64Vec{}
+	ra.temps = []i64Vec{}
+	ra.hums = []i64Vec{}
+	ra.locs = []i64Vec{}
+}
+
+func (ra *rangeAlmanac) AddSeeds(ss []int64) {
 	for _, sv := range buildSeedsVecs(ss) {
-		ra.seeds = append(ra.seeds, splitSeeds(sv, 0)...)
+		ra.seeds = append(ra.seeds, splitRange(sv, 0)...)
 	}
 }
 
@@ -46,97 +52,71 @@ func (ra *rangeAlmanac) minLoc() int64 {
 func (ra *rangeAlmanac) Do() {
 	fmt.Printf("seeds: %v\n", ra.seeds)
 	for _, seed := range ra.seeds {
-		var soils []int64
 		for i := seed.from; i <= seed.to; i++ {
 			if includes(ra.soils, ra.seed2Soil(i)) {
 				continue
 			}
-			soils = append(soils, ra.seed2Soil(i))
+			ra.soils = merge(ra.soils, ra.seed2Soil(i))
 		}
-		for _, v := range i64SliceToi64Vecs(soils) {
-			ra.soils = append(ra.soils, v)
-			ra.soils = mergeI64Vecs(ra.soils)
-		}
+		fmt.Printf("soils: %v\n", ra.soils)
 	}
-	fmt.Printf("soils: %v\n", ra.soils)
+	ra.soils = splitVecs(ra.soils)
 	for _, soil := range ra.soils {
-		var ferts []int64
 		for i := soil.from; i <= soil.to; i++ {
 			if includes(ra.ferts, ra.soil2Fert(i)) {
 				continue
 			}
-			ferts = append(ferts, ra.soil2Fert(i))
+			ra.ferts = merge(ra.ferts, ra.soil2Fert(i))
 		}
-		for _, v := range i64SliceToi64Vecs(ferts) {
-			ra.ferts = append(ra.ferts, v)
-			ra.ferts = mergeI64Vecs(ra.ferts)
-		}
+		fmt.Printf("ferts: %v\n", ra.ferts)
 	}
-	fmt.Printf("ferts: %v\n", ra.ferts)
+	ra.ferts = splitVecs(ra.ferts)
 	for _, fert := range ra.ferts {
-		var waters []int64
 		for i := fert.from; i <= fert.to; i++ {
 			if includes(ra.waters, ra.fert2Water(i)) {
 				continue
 			}
-			waters = append(waters, ra.fert2Water(i))
-		}
-		for _, v := range i64SliceToi64Vecs(waters) {
-			ra.waters = append(ra.waters, v)
-			ra.waters = mergeI64Vecs(ra.waters)
+			ra.waters = merge(ra.waters, ra.fert2Water(i))
 		}
 	}
 	fmt.Printf("waters: %v\n", ra.waters)
+	ra.waters = splitVecs(ra.waters)
 	for _, water := range ra.waters {
-		var lights []int64
 		for i := water.from; i <= water.to; i++ {
 			if includes(ra.lights, ra.water2Light(i)) {
 				continue
 			}
-			lights = append(lights, ra.water2Light(i))
-		}
-		for _, v := range i64SliceToi64Vecs(lights) {
-			ra.lights = append(ra.lights, v)
-			ra.lights = mergeI64Vecs(ra.lights)
+			ra.lights = merge(ra.lights, ra.water2Light(i))
 		}
 	}
+	ra.lights = splitVecs(ra.lights)
 	fmt.Printf("lights: %v\n", ra.lights)
 	for _, light := range ra.lights {
-		var temps []int64
 		for i := light.from; i <= light.to; i++ {
 			if includes(ra.temps, ra.light2Temp(i)) {
 				continue
 			}
-			temps = append(temps, ra.light2Temp(i))
-		}
-		for _, v := range i64SliceToi64Vecs(temps) {
-			ra.temps = append(ra.temps, v)
-			ra.temps = mergeI64Vecs(ra.temps)
+			ra.temps = merge(ra.temps, ra.light2Temp(i))
 		}
 	}
+	ra.temps = splitVecs(ra.temps)
 	fmt.Printf("temps: %v\n", ra.temps)
 	for _, temp := range ra.temps {
-		var hums []int64
 		for i := temp.from; i <= temp.to; i++ {
 			if includes(ra.hums, ra.temp2Hum(i)) {
 				continue
 			}
-			hums = append(hums, ra.temp2Hum(i))
-		}
-		for _, v := range i64SliceToi64Vecs(hums) {
-			ra.hums = append(ra.hums, v)
-			ra.hums = mergeI64Vecs(ra.hums)
+			ra.hums = merge(ra.hums, ra.temp2Hum(i))
 		}
 	}
+	ra.hums = splitVecs(ra.hums)
 	fmt.Printf("hums: %v\n", ra.hums)
 	for _, hum := range ra.hums {
-		var locs []int64
 		for i := hum.from; i <= hum.to; i++ {
-			locs = append(locs, ra.hum2Loc(i))
-		}
-		for _, v := range i64SliceToi64Vecs(locs) {
-			ra.locs = append(ra.locs, v)
-			ra.locs = mergeI64Vecs(ra.locs)
+			if includes(ra.locs, ra.hum2Loc(i)) {
+				continue
+			}
+			ra.locs = merge(ra.locs, ra.hum2Loc(i))
 		}
 	}
 	fmt.Printf("locs: %v\n", ra.locs)
@@ -151,36 +131,41 @@ func includes(vecs []i64Vec, target int64) bool {
 	return false
 }
 
-func mergeI64Vecs(vecs []i64Vec) []i64Vec {
-	sort.Slice(vecs, func(i, j int) bool {
-		return vecs[i].from < vecs[j].from
-	})
-	var merged []i64Vec
-	merged = append(merged, vecs[0])
-	for i := 1; i < len(vecs); i++ {
-		if vecs[i].from-1 <= merged[len(merged)-1].to {
-			merged[len(merged)-1].to = vecs[i].to
-		} else {
-			merged = append(merged, vecs[i])
-		}
+func merge(vecs []i64Vec, n int64) []i64Vec {
+	if len(vecs) == 0 {
+		return []i64Vec{{n, n}}
 	}
-	return merged
-}
-
-func i64SliceToi64Vecs(s []int64) []i64Vec {
-	var vecs []i64Vec
-	sort.Slice(s, func(i, j int) bool {
-		return s[i] < s[j]
-	})
-	from := s[0]
-	for i := 1; i < len(s); i++ {
-		if s[i] != s[i-1]+1 {
-			vecs = append(vecs, i64Vec{from, s[i-1]})
-			from = s[i]
+	var newVecs []i64Vec
+	var isMerged bool
+	for i := 0; i < len(vecs); i++ {
+		// expand
+		if n == vecs[i].from-1 {
+			newVecs = append(newVecs, i64Vec{n, vecs[i].to})
+			isMerged = true
+			continue
 		}
+		// merge
+		if n == vecs[i].to+1 && i != len(vecs)-1 && n == vecs[i+1].from-1 {
+			newVecs = append(newVecs, i64Vec{vecs[i].from, vecs[i+1].to})
+			isMerged = true
+			i++
+			continue
+		}
+		// expand
+		if n == vecs[i].to+1 {
+			newVecs = append(newVecs, i64Vec{vecs[i].from, n})
+			isMerged = true
+			continue
+		}
+		newVecs = append(newVecs, vecs[i])
 	}
-	vecs = append(vecs, i64Vec{from, s[len(s)-1]})
-	return vecs
+	if !isMerged {
+		newVecs = append(newVecs, i64Vec{n, n})
+	}
+	sort.Slice(newVecs, func(i, j int) bool {
+		return newVecs[i].from < newVecs[j].from
+	})
+	return newVecs
 }
 
 type almanacFn struct {
@@ -527,8 +512,23 @@ func main() {
 		ra := &rangeAlmanac{
 			almanacFn: *af,
 		}
-		ra.AddSeeds(lines[0])
-		ra.Do()
+
+		seedsString := strings.TrimPrefix(lines[0], "seeds: ")
+		ss, err := splitString2Int64(seedsString, " ")
+		if err != nil {
+			panic(err)
+		}
+		var minLoc int64 = math.MaxInt64
+		for i := 0; i < len(ss); i += 2 {
+			// TODO(scnace): use goroutine and waitGroup to speed up
+			start := ss[i]
+			length := ss[i+1]
+			ra.AddSeeds([]int64{start, start + length - 1})
+			ra.Do()
+			if ra.minLoc() < minLoc {
+				minLoc = ra.minLoc()
+			}
+		}
 		fmt.Fprintf(os.Stdout, "p2: %d\n", ra.minLoc())
 		return nil
 	})
@@ -553,31 +553,39 @@ func atoi64(raw string) int64 {
 	return i
 }
 
-const splitSize = 4
+const splitSize = 8
 
 func buildSeedsVecs(ss []int64) []i64Vec {
 	var seeds []i64Vec
 	for i := 0; i < len(ss); i += 2 {
 		start := ss[i]
 		length := ss[i+1]
-		seeds = append(seeds, i64Vec{start, start + length})
+		seeds = append(seeds, i64Vec{start, start + length - 1})
 	}
 	return seeds
 }
 
-func splitSeeds(seeds i64Vec, count uint32) []i64Vec {
+func splitVecs(vecs []i64Vec) []i64Vec {
+	var seedVecs []i64Vec
+	for _, vec := range vecs {
+		seedVecs = append(seedVecs, splitRange(vec, 0)...)
+	}
+	return seedVecs
+}
+
+func splitRange(vec i64Vec, count uint32) []i64Vec {
 	var seedVecs []i64Vec
 	if count < splitSize {
-		seedVecs = append(seedVecs, splitSeeds(i64Vec{
-			from: seeds.from,
-			to:   seeds.from + (seeds.to-seeds.from)/2,
+		seedVecs = append(seedVecs, splitRange(i64Vec{
+			from: vec.from,
+			to:   vec.from + (vec.to-vec.from)/2,
 		}, count+1)...)
-		seedVecs = append(seedVecs, splitSeeds(i64Vec{
-			from: seeds.from + (seeds.to-seeds.from)/2,
-			to:   seeds.to,
+		seedVecs = append(seedVecs, splitRange(i64Vec{
+			from: vec.from + (vec.to-vec.from)/2,
+			to:   vec.to,
 		}, count+1)...)
 	} else {
-		seedVecs = append(seedVecs, seeds)
+		seedVecs = append(seedVecs, vec)
 	}
 	return seedVecs
 }
