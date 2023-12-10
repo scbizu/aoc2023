@@ -242,6 +242,7 @@ func (m squareMaze) mostRight() int {
 	return right
 }
 
+// isPointInside 判断点是否在平面内(射线法实现)
 func (m squareMaze) isPointInside(x, y int) bool {
 	var intersectCount int
 	i, j := x, y
@@ -250,6 +251,11 @@ func (m squareMaze) isPointInside(x, y int) bool {
 			break
 		}
 		c := m.maze.Get(i, j)
+		// 从当前点到左上边界的射线上的交点
+		// 1. 不同横竖的射线: 需要计算太多重合的时候方向的case，在这个场景下不如直接用斜线
+		// 2. 把转角点看成曲线，则有: 7,L 对于 k = -1 的斜线来说，都是凸点，属于外侧;
+		//    F,J 对于 k = -1 的斜线来说，都是凹点，属于内侧;
+		//    S 既是凸点也是凹点
 		if c == '7' || c == 'L' || c == 'S' {
 			i = i - 1
 			j = j - 1
