@@ -14,6 +14,7 @@ var total int
 type sequence struct {
 	seq       []byte
 	formation []int
+	resSeq    []byte
 }
 
 func (s sequence) String() string {
@@ -29,43 +30,34 @@ func (s sequence) count() sequence {
 	if len(s.seq) == 0 {
 		return s
 	}
+	n := s.formation[0]
 	switch s.seq[0] {
 	case '.':
 		newSeq := sequence{
 			seq:       s.seq[1:],
 			formation: s.formation,
 		}
-		newSeq = newSeq.count()
-		return newSeq
+		newSeq.count()
 	case '#':
-		n := s.formation[0]
-		if n == 1 {
-			switch {
-			case len(s.seq) > 1 && s.seq[1] != '#':
-				newSeq := sequence{
-					seq:       s.seq[2:],
-					formation: s.formation[1:],
-				}
-				newSeq = newSeq.count()
-				return newSeq
-			case len(s.seq) == 1:
-				newSeq := sequence{
-					seq:       s.seq[1:],
-					formation: s.formation[1:],
-				}
-				newSeq = newSeq.count()
-				return newSeq
-			}
-		} else {
+		switch {
+		case len(s.seq) < n || strings.Contains(string(s.seq[:n]), "."):
 			newSeq := sequence{
-				seq: s.seq[1:],
+				seq:       s.seq[1:],
+				formation: s.formation,
 			}
-			newSeq.formation = append(newSeq.formation, n-1)
-			if len(s.formation) > 1 {
-				newSeq.formation = append(newSeq.formation, s.formation[1:]...)
+			newSeq.count()
+		case len(s.seq) == n && !strings.Contains(string(s.seq[:n]), "."):
+			newSeq := sequence{
+				seq:       s.seq[n:],
+				formation: s.formation[1:],
 			}
-			newSeq = newSeq.count()
-			return newSeq
+			newSeq.count()
+		case len(s.seq) > n && !strings.Contains(string(s.seq[:n]), ".") && s.seq[n] != '#':
+			newSeq := sequence{
+				seq:       s.seq[n+1:],
+				formation: s.formation[1:],
+			}
+			newSeq.count()
 		}
 	case '?':
 		tmpSeq := make([]byte, len(s.seq))
