@@ -10,21 +10,27 @@ import (
 	"github.com/scbizu/aoc2022/helper/input"
 )
 
-var total int
+var runCache = make(map[string]int)
 
 type sequence struct {
 	seq       []byte
 	formation []int
 	resSeq    []byte
 	resSet    *set.Set[string]
+	total     int
 }
 
 func (s sequence) String() string {
-	return fmt.Sprintf("seq: %s,  formation: %+v", string(s.seq), s.formation)
+	return fmt.Sprintf("seq: %s,  formation: %+v\n", string(s.seq), s.formation)
 }
 
 func (s *sequence) count() {
 	// fmt.Printf("%s\n", s)
+	// if _, ok := runCache[string(s.seq)]; !ok {
+	// 	runCache[string(s.seq)] = s.resSet.Size()
+	// } else {
+	// 	return
+	// }
 	if len(s.formation) == 0 {
 		if len(s.seq) > 0 {
 			for i := 0; i < len(s.seq); i++ {
@@ -35,10 +41,10 @@ func (s *sequence) count() {
 			}
 		}
 		if !s.resSet.Has(string(s.resSeq)) {
-			// fmt.Printf("res: %s\n", string(s.resSeq))
-			total++
+			fmt.Printf("res: %s\n", string(s.resSeq))
 		}
 		s.resSet.Add(string(s.resSeq))
+		s.total++
 		return
 	}
 	if len(s.seq) == 0 {
@@ -79,8 +85,8 @@ func (s *sequence) count() {
 			formation: s.formation,
 			resSeq:    s.resSeq,
 			resSet:    s.resSet,
+			total:     s.total,
 		}
-		// newSeq.resSeq = append(newSeq.resSeq, '.')
 		s1q.count()
 		// fmt.Printf("? -> #: %s\n", s.seq)
 		s2 := make([]byte, len(s.seq))
@@ -91,8 +97,8 @@ func (s *sequence) count() {
 			formation: s.formation,
 			resSeq:    s.resSeq,
 			resSet:    s.resSet,
+			total:     s.total,
 		}
-		// newSeq.resSeq = append(newSeq.resSeq, '#')
 		s2q.count()
 	}
 }
@@ -110,7 +116,7 @@ func sum(s []int) int {
 
 func main() {
 	p1()
-	p2()
+	// p2()
 }
 
 // func p2() {
@@ -154,7 +160,7 @@ func main() {
 
 func p2() {
 	txt := input.NewTXTFile("./input.txt")
-	total = 0
+	var total int
 	txt.ReadByLineEx(context.Background(), func(_ int, line string) error {
 		if line == "" {
 			return nil
@@ -170,6 +176,7 @@ func p2() {
 			resSet:    set.New[string](),
 		}
 		seq.count()
+		total += seq.resSet.Size()
 		return nil
 	})
 	fmt.Fprintf(os.Stdout, "p2: %d\n", total)
@@ -204,6 +211,7 @@ func unfoldFormation(s []int) []int {
 
 func p1() {
 	txt := input.NewTXTFile("./input.txt")
+	var total int
 	txt.ReadByLineEx(context.Background(), func(_ int, line string) error {
 		if line == "" {
 			return nil
@@ -219,6 +227,7 @@ func p1() {
 			resSet:    set.New[string](),
 		}
 		seq.count()
+		total += seq.total
 		return nil
 	})
 	fmt.Fprintf(os.Stdout, "p1: %d\n", total)
