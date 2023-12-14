@@ -187,7 +187,7 @@ func (m mirrorMatrix) mirror(opts ...mirrorOption) []directionLine {
 }
 
 func main() {
-	// p1()
+	p1()
 	p2()
 }
 
