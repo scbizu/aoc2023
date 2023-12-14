@@ -25,12 +25,6 @@ func (s sequence) String() string {
 }
 
 func (s *sequence) count() {
-	// fmt.Printf("%s\n", s)
-	// if _, ok := runCache[string(s.seq)]; !ok {
-	// 	runCache[string(s.seq)] = s.resSet.Size()
-	// } else {
-	// 	return
-	// }
 	if len(s.formation) == 0 {
 		if len(s.seq) > 0 {
 			for i := 0; i < len(s.seq); i++ {
@@ -40,9 +34,9 @@ func (s *sequence) count() {
 				s.resSeq = append(s.resSeq, '.')
 			}
 		}
-		if !s.resSet.Has(string(s.resSeq)) {
-			fmt.Printf("res: %s\n", string(s.resSeq))
-		}
+		// if !s.resSet.Has(string(s.resSeq)) {
+		// 	fmt.Printf("res: %s\n", string(s.resSeq))
+		// }
 		s.resSet.Add(string(s.resSeq))
 		s.total++
 		return
@@ -77,6 +71,10 @@ func (s *sequence) count() {
 			return
 		}
 	case '?':
+		if t, ok := runCache[s.String()]; ok {
+			s.total = t
+			return
+		}
 		s1 := make([]byte, len(s.seq))
 		copy(s1, s.seq)
 		s1[0] = '.'
@@ -87,7 +85,12 @@ func (s *sequence) count() {
 			resSet:    s.resSet,
 			total:     s.total,
 		}
-		s1q.count()
+		if t, ok := runCache[s1q.String()]; ok {
+			s1q.total = t
+		} else {
+			s1q.count()
+			runCache[s1q.String()] = s1q.total
+		}
 		// fmt.Printf("? -> #: %s\n", s.seq)
 		s2 := make([]byte, len(s.seq))
 		copy(s2, s.seq)
@@ -99,7 +102,14 @@ func (s *sequence) count() {
 			resSet:    s.resSet,
 			total:     s.total,
 		}
-		s2q.count()
+		if t, ok := runCache[s2q.String()]; ok {
+			s2q.total = t
+		} else {
+			s2q.count()
+			runCache[s2q.String()] = s2q.total
+		}
+		s.total = s1q.total + s2q.total
+		runCache[s.String()] = s.total
 	}
 }
 
@@ -116,47 +126,8 @@ func sum(s []int) int {
 
 func main() {
 	p1()
-	// p2()
+	p2()
 }
-
-// func p2() {
-// 	txt := input.NewTXTFile("./input.txt")
-// 	var allTotal int
-// 	txt.ReadByLineEx(context.Background(), func(_ int, line string) error {
-// 		if line == "" {
-// 			return nil
-// 		}
-// 		total = 0
-// 		parts := strings.Split(line, " ")
-// 		if len(parts) != 2 {
-// 			panic("invalid input")
-// 		}
-// 		numStrs := strings.Split(parts[1], ",")
-// 		seq := sequence{
-// 			seq:       []byte(parts[0]),
-// 			formation: numStrsToNums(numStrs),
-// 			resSet:    set.New[string](),
-// 		}
-// 		seq.count()
-// 		p1Total := total
-// 		total = 0
-// 		var s []byte
-// 		s = append(s, []byte(parts[0])...)
-// 		s = append(s, '?')
-// 		s = append(s, []byte(parts[0])...)
-// 		seq = sequence{
-// 			seq:       s,
-// 			formation: double(numStrsToNums(numStrs)),
-// 			resSet:    set.New[string](),
-// 		}
-// 		seq.count()
-// 		rate := total / p1Total
-// 		allTotal += total * rate * rate * rate
-// 		fmt.Printf("total: %d,rate: %d, p1Total: %d,allTotal: %d\n", total, rate, p1Total, total*rate*rate*rate)
-// 		return nil
-// 	})
-// 	fmt.Fprintf(os.Stdout, "p2: %d\n", allTotal)
-// }
 
 func p2() {
 	txt := input.NewTXTFile("./input.txt")
@@ -170,13 +141,14 @@ func p2() {
 			panic("invalid input")
 		}
 		numStrs := strings.Split(parts[1], ",")
+		runCache = make(map[string]int)
 		seq := sequence{
 			seq:       unfoldSeq([]byte(parts[0])),
 			formation: unfoldFormation(numStrsToNums(numStrs)),
 			resSet:    set.New[string](),
 		}
 		seq.count()
-		total += seq.resSet.Size()
+		total += seq.total
 		return nil
 	})
 	fmt.Fprintf(os.Stdout, "p2: %d\n", total)
@@ -201,14 +173,6 @@ func unfoldFormation(s []int) []int {
 	return res
 }
 
-// func double[T comparable](s []T) []T {
-// 	var res []T
-// 	for i := 0; i < 2; i++ {
-// 		res = append(res, s...)
-// 	}
-// 	return res
-// }
-
 func p1() {
 	txt := input.NewTXTFile("./input.txt")
 	var total int
@@ -221,6 +185,7 @@ func p1() {
 			panic("invalid input")
 		}
 		numStrs := strings.Split(parts[1], ",")
+		runCache = make(map[string]int)
 		seq := sequence{
 			seq:       []byte(parts[0]),
 			formation: numStrsToNums(numStrs),
