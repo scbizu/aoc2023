@@ -344,6 +344,6 @@ func abs(n int) int {
 }
 
 func main() {
-	// p1()
+	p1()
 	p2()
 }
