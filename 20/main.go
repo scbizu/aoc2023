@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	// p1()
+	p1()
 	p2()
 }
 
@@ -84,6 +84,9 @@ func (c *conjunctionModule) run(from string, pulses ...pulse) pulse {
 	for _, pulse := range pulses {
 		if pulse == high {
 			c.mems.Remove(from)
+		}
+		if pulse == low {
+			c.mems.Add(from)
 		}
 		if c.mems.Size() == 0 {
 			return low
@@ -186,14 +189,6 @@ func (g *moduleGraph) getNode(from string) int {
 		}
 	}
 	return -1
-	// fmt.Printf("add node: %s\n", from)
-	// g.nodes = append(g.nodes, &moduleNode{
-	// 	name:  from,
-	// 	kind:  output,
-	// 	state: &outputModule{},
-	// })
-	// g.states[from] = &outputModule{}
-	// return len(g.nodes) - 1
 }
 
 func (g *moduleGraph) countPulses() (int, int) {
@@ -217,15 +212,7 @@ func (g *moduleGraph) run() {
 		if !ok {
 			continue
 		}
-		// var stop int
-		// for _, in := range node.ins {
-		// 	if node.state.stop(in) {
-		// 		stop++
-		// 	}
-		// }
-		// if stop == len(node.ins) {
-		// 	continue
-		// }
+
 		var out pulse
 		switch node.kind {
 		case flipFlop:
@@ -236,35 +223,30 @@ func (g *moduleGraph) run() {
 				continue
 			}
 			g.states[node.name] = ff
-			// node.ins = []pulse{}
 			// fmt.Printf("after: %t\n", ff.state)
 		case conjunction:
 			co := node.state.(*conjunctionModule)
 			// fmt.Printf("[%s]before: %+v,parent: %s,ins: %+v\n", node.name, co.mems, node.parent, node.ins)
 			out = co.run(node.parent, node.ins[0])
-			// if node.ins[0] == low && node.name == "zb" {
-			// 	fmt.Println("zb")
-			// }
 			g.states[node.name] = co
-			// node.ins = node.ins[1:]
 			// fmt.Printf("[%s]after: %+v\n", node.name, co.mems)
 		default:
 			panic("unknown module kind")
 		}
 
 		for _, n := range node.outs {
-			// if out == low {
-			// 	if (node.name == "lg" && n.name == "rr") || (node.name == "st" && n.name == "zb") ||
-			// 		(node.name == "gr" && n.name == "js") || (node.name == "bn" && n.name == "bs") {
-			// 		// fmt.Printf("found %s\n", node.name)
-			// 		fmt.Printf("%s -> %s -> %s\n", node.name, out, n.name)
-			// 		g.exitNodes.Add(node.name)
-			// 	}
-			// }
-			fmt.Printf("%s -> %s -> %s\n", node.name, out, n.name)
+			if out == low {
+				if (node.name == "lg" && n.name == "rr") || (node.name == "st" && n.name == "zb") ||
+					(node.name == "gr" && n.name == "js") || (node.name == "bn" && n.name == "bs") {
+					// fmt.Printf("found %s\n", node.name)
+					// fmt.Printf("%s -> %s -> %s\n", node.name, out, n.name)
+					g.exitNodes.Add(node.name)
+				}
+			}
+			// fmt.Printf("%s -> %s -> %s\n", node.name, out, n.name)
 			g.pulses[out]++
 			n.parent = node.name
-			if g.getNode(n.name) > 0 {
+			if g.getNode(n.name) >= 0 {
 				n.outs = g.nodes[g.getNode(n.name)].outs
 			}
 			n.ins = []pulse{out}
@@ -502,17 +484,16 @@ func p2() {
 			g.nodes = append(g.nodes, n)
 		} else {
 			idx := g.getNode(e.from)
-			if idx > 0 {
+			if idx >= 0 {
 				g.nodes[idx].outs = append(g.nodes[idx].outs, nd)
 			}
 		}
 	}
 
 	var count int
-
-	for i := 0; i < 4000; i++ {
+	totals := make([]int64, 0, 4)
+	for {
 		count++
-		fmt.Printf("push: %d\n", count)
 		for _, s := range start {
 			g.q.Push(g.nodes[g.getNode(s)])
 		}
@@ -521,51 +502,40 @@ func p2() {
 			g.nodes[idx].ins = []pulse{}
 		}
 		g.run()
-		fmt.Printf("next\n")
+
+		if len(totals) == 4 {
+			break
+		}
+		if g.exitNodes.Has("lg") {
+			lg := int64(count)
+			// fmt.Printf("found lg: %d\n", lg)
+			totals = append(totals, lg)
+			g.exitNodes.Remove("lg")
+		}
+		if g.exitNodes.Has("st") {
+			st := int64(count)
+			// fmt.Printf("found st: %d\n", st)
+			totals = append(totals, st)
+			g.exitNodes.Remove("st")
+		}
+		if g.exitNodes.Has("gr") {
+			gr := int64(count)
+			// fmt.Printf("found gr: %d\n", gr)
+			totals = append(totals, gr)
+			g.exitNodes.Remove("gr")
+		}
+		if g.exitNodes.Has("bn") {
+			bn := int64(count)
+			// fmt.Printf("found bn: %d\n", bn)
+			totals = append(totals, bn)
+			g.exitNodes.Remove("bn")
+		}
 	}
-
-	// var count int
-	// // totals := make([]int64, 0, 4)
-	// for {
-	// 	count++
-	// 	for _, s := range start {
-	// 		g.q.Push(s)
-	// 	}
-	// 	g.inits = copyMap(insMap)
-	// 	for idx := range g.nodes {
-	// 		g.nodes[idx].ins = []pulse{}
-	// 	}
-	// 	fmt.Printf("run: %d\n", count)
-	// 	g.run()
-
-	// 	// if len(totals) == 4 {
-	// 	// 	break
-	// 	// }
-	// 	// if g.exitNodes.Has("lg") {
-	// 	// 	lg := int64(count)
-	// 	// 	fmt.Printf("found lg: %d\n", lg)
-	// 	// 	totals = append(totals, lg)
-	// 	// 	g.exitNodes.Remove("lg")
-	// 	// }
-	// 	// if g.exitNodes.Has("st") {
-	// 	// 	st := int64(count)
-	// 	// 	fmt.Printf("found st: %d\n", st)
-	// 	// 	totals = append(totals, st)
-	// 	// 	g.exitNodes.Remove("st")
-	// 	// }
-	// 	// if g.exitNodes.Has("gr") {
-	// 	// 	gr := int64(count)
-	// 	// 	fmt.Printf("found gr: %d\n", gr)
-	// 	// 	totals = append(totals, gr)
-	// 	// 	g.exitNodes.Remove("gr")
-	// 	// }
-	// 	// if g.exitNodes.Has("bn") {
-	// 	// 	bn := int64(count)
-	// 	// 	fmt.Printf("found bn: %d\n", bn)
-	// 	// 	totals = append(totals, bn)
-	// 	// 	g.exitNodes.Remove("bn")
-	// 	// }
-	// }
+	total := 1
+	for _, t := range totals {
+		total = int(lcm(int64(total), t))
+	}
+	fmt.Printf("p2: %d\n", total)
 }
 
 // lcm calculate the least common multiple
