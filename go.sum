@@ -4,6 +4,8 @@ github.com/magejiCoder/magejiAoc v0.0.2 h1:URznIbjUHaBYa5kNXDQczDkt8SiOToOcIMol6
 github.com/magejiCoder/magejiAoc v0.0.2/go.mod h1:VqQc9Wn2C5qXy9gQxpXum3YnRvo7Vn4YV55OQa4muwE=
 github.com/magejiCoder/magejiAoc v0.0.3 h1:9SWcw3ANsmd5/pp0cPJiwdhjOFVlMaIWEZLKU7hIiLE=
 github.com/magejiCoder/magejiAoc v0.0.3/go.mod h1:VqQc9Wn2C5qXy9gQxpXum3YnRvo7Vn4YV55OQa4muwE=
+github.com/magejiCoder/magejiAoc v0.0.5 h1:ZA2uxwAt8bSLQaj+xDdUiZ+E+tReatbVSkdWbpQLsZE=
+github.com/magejiCoder/magejiAoc v0.0.5/go.mod h1:VqQc9Wn2C5qXy9gQxpXum3YnRvo7Vn4YV55OQa4muwE=
 github.com/magejiCoder/set v0.0.0-20220316024806-489304061977 h1:Qq500vKWiKKFKCZAqViEqK/N/6oq2RwJa/IDR4y0rn4=
 github.com/magejiCoder/set v0.0.0-20220316024806-489304061977/go.mod h1:eTLqIs7EGJmwj9kN/Rfd27q2dofYTw52JqyewbBdar4=
 github.com/scbizu/aoc2022 v0.0.0-20230129070201-9efd4d943e02 h1:qJiQOu+qaPvK6ZZ6P/Cul/1HfApG9wwYt1fw0vo6aB0=
