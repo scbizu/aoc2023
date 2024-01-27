@@ -14,6 +14,12 @@ github.com/magejiCoder/magejiAoc v0.0.8 h1:SifbqKyM1ATz5EJyEnZIBQVslRpVvdhO8GLt3
 github.com/magejiCoder/magejiAoc v0.0.8/go.mod h1:485NlLWAkaMGbMeo9nmvdtpLwTF9Jh+AWEQDoWk2PwY=
 github.com/magejiCoder/magejiAoc v0.0.9 h1:cspLZk3iIn7PTR45g0bD72kr8LQNAjGfj7uS56yUYSQ=
 github.com/magejiCoder/magejiAoc v0.0.9/go.mod h1:485NlLWAkaMGbMeo9nmvdtpLwTF9Jh+AWEQDoWk2PwY=
+github.com/magejiCoder/magejiAoc v0.0.10 h1:mNFWzuhP+WWp0B0smlrlLi/yw9xAI8TELhvRM4aCkEE=
+github.com/magejiCoder/magejiAoc v0.0.10/go.mod h1:485NlLWAkaMGbMeo9nmvdtpLwTF9Jh+AWEQDoWk2PwY=
+github.com/magejiCoder/magejiAoc v0.0.11 h1:yEoOqWpmpnpAQUQ57tItEBcP3ZlAVuYDh7OeJhwmQrA=
+github.com/magejiCoder/magejiAoc v0.0.11/go.mod h1:485NlLWAkaMGbMeo9nmvdtpLwTF9Jh+AWEQDoWk2PwY=
+github.com/magejiCoder/magejiAoc v0.0.12 h1:UwRMjlN506QGGXcGs3mryBj0IVoTplad9wPw4Pu9gL8=
+github.com/magejiCoder/magejiAoc v0.0.12/go.mod h1:485NlLWAkaMGbMeo9nmvdtpLwTF9Jh+AWEQDoWk2PwY=
 github.com/magejiCoder/set v0.0.0-20220316024806-489304061977 h1:Qq500vKWiKKFKCZAqViEqK/N/6oq2RwJa/IDR4y0rn4=
 github.com/magejiCoder/set v0.0.0-20220316024806-489304061977/go.mod h1:eTLqIs7EGJmwj9kN/Rfd27q2dofYTw52JqyewbBdar4=
 github.com/scbizu/aoc2022 v0.0.0-20230129070201-9efd4d943e02 h1:qJiQOu+qaPvK6ZZ6P/Cul/1HfApG9wwYt1fw0vo6aB0=
