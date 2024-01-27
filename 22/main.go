@@ -7,11 +7,92 @@ import (
 
 	"github.com/magejiCoder/magejiAoc/grid"
 	"github.com/magejiCoder/magejiAoc/input"
+	"github.com/magejiCoder/magejiAoc/set"
 )
 
 type cube struct {
 	points  map[grid.XYZVec]int
 	indexes map[int][]grid.XYZVec
+}
+
+type supportGraph struct {
+	G       map[int]*set.Set[int]
+	reverse map[int]*set.Set[int]
+}
+
+func (s supportGraph) Reverse() supportGraph {
+	s.reverse = make(map[int]*set.Set[int])
+	for f, ts := range s.G {
+		for _, t := range ts.List() {
+			if _, ok := s.reverse[t]; !ok {
+				s.reverse[t] = set.New[int]()
+			}
+			s.reverse[t].Add(f)
+		}
+	}
+	return s
+}
+
+func (s supportGraph) ReverseString() string {
+	b := strings.Builder{}
+	for f, ts := range s.reverse {
+		b.WriteString(fmt.Sprintf("%d -> %s\n", f, ts.String()))
+	}
+	return b.String()
+}
+
+func (s supportGraph) String() string {
+	b := strings.Builder{}
+	for f, ts := range s.G {
+		for _, t := range ts.List() {
+			b.WriteString(fmt.Sprintf("%d-->%d\n", f, t))
+		}
+	}
+	return b.String()
+}
+
+func (s supportGraph) FindHasSupportNode() int {
+	var count int
+	for _, ts := range s.G {
+		var reserve bool
+		for _, t := range ts.List() {
+			if s.reverse[t].Size() == 1 {
+				reserve = true
+				break
+			}
+		}
+		if !reserve {
+			count++
+		}
+	}
+	for i := range s.reverse {
+		if _, ok := s.G[i]; !ok {
+			count++
+		}
+	}
+	return count
+}
+
+func (c cube) ToGraph() supportGraph {
+	sg := supportGraph{
+		G: make(map[int]*set.Set[int]),
+	}
+	for i := 0; i < len(c.indexes); i++ {
+		for _, p := range c.indexes[i] {
+			pp := grid.XYZVec{
+				X: p.X,
+				Y: p.Y,
+				Z: p.Z + 1,
+			}
+			if _, ok := c.points[pp]; ok && c.points[pp] != i {
+				if _, ok := sg.G[i]; !ok {
+					sg.G[i] = set.New[int]()
+				}
+				sg.G[i].Add(c.points[pp])
+			}
+		}
+	}
+	return sg
 }
 
 func (c cube) String() string {
@@ -71,46 +152,6 @@ func (c *cube) Drop(index int, l line3D) {
 			break
 		}
 	}
-}
-
-func (c cube) Count() int32 {
-	var count int32
-	for i, ps := range c.indexes {
-		var reserveFlag bool
-		for _, p := range ps {
-			pp := grid.XYZVec{
-				X: p.X,
-				Y: p.Y,
-				Z: p.Z + 1,
-			}
-			// 被其他 cube 压着
-			// 被压着的不能是自己
-			// parent 只能有一个 child
-			if parent, ok := c.points[pp]; ok && c.points[pp] != i {
-				var moreChild bool
-				for _, ppa := range c.indexes[parent] {
-					ppap := grid.XYZVec{
-						X: ppa.X,
-						Y: ppa.Y,
-						Z: ppa.Z - 1,
-					}
-					if c.points[ppap] != i && c.points[ppap] != parent {
-						moreChild = true
-						break
-					}
-				}
-				if !moreChild {
-					reserveFlag = true
-					break
-				}
-			}
-		}
-		if !reserveFlag {
-			fmt.Printf("destroy: %d\n", i)
-			count++
-		}
-	}
-	return count
 }
 
 type line3D struct {
@@ -185,6 +226,6 @@ func main() {
 	for i, l := range lines {
 		c.Drop(i, l)
 	}
-	fmt.Println(c)
-	fmt.Printf("p1: %d\n", c.Count())
+	fmt.Printf("%s\n", c.ToGraph())
+	fmt.Printf("p1:%d\n", c.ToGraph().Reverse().FindHasSupportNode())
 }
