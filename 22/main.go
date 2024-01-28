@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/magejiCoder/magejiAoc/grid"
@@ -16,8 +17,9 @@ type cube struct {
 }
 
 type supportGraph struct {
-	G       map[int]*set.Set[int]
-	reverse map[int]*set.Set[int]
+	G        map[int]*set.Set[int]
+	reverse  map[int]*set.Set[int]
+	destroys []int
 }
 
 func (s supportGraph) Reverse() supportGraph {
@@ -33,27 +35,55 @@ func (s supportGraph) Reverse() supportGraph {
 	return s
 }
 
-func (s supportGraph) ReverseString() string {
-	b := strings.Builder{}
-	for f, ts := range s.reverse {
-		b.WriteString(fmt.Sprintf("%d -> %s\n", f, ts.String()))
-	}
-	return b.String()
-}
-
 func (s supportGraph) String() string {
 	b := strings.Builder{}
 	for f, ts := range s.G {
-		for _, t := range ts.List() {
-			b.WriteString(fmt.Sprintf("%d-->%d\n", f, t))
-		}
+		b.WriteString(fmt.Sprintf("%d -> %v\n", f, ts.String()))
 	}
 	return b.String()
 }
 
-func (s supportGraph) FindHasSupportNode() int {
+func (s supportGraph) chainDestroy() int {
 	var count int
-	for _, ts := range s.G {
+	for _, i := range s.destroys {
+		c := s.chain(i, set.New[int](i))
+		// fmt.Printf("chain: %d, %d\n", i, c)
+		count += c
+	}
+	return count
+}
+
+func (s supportGraph) chain(i int, bks *set.Set[int]) int {
+	var count int
+	if _, ok := s.G[i]; !ok {
+		return 0
+	}
+	for _, t := range s.G[i].List() {
+		if bks.Has(t) {
+			continue
+		}
+		re, ok := s.reverse[t]
+		if ok {
+			// 存在其它支撑当前砖块的砖块不在「已经确定将要坠落的砖块列表」里面
+			// 那么这个砖块就不会坠落
+			// re:  所有支撑当前砖块的砖块列表
+			// bks: 已经确定将要坠落的砖块列表
+			if set.Intersection[int](bks, re).Size() < re.Size() {
+				// fmt.Printf("size: %d, %d\n", set.Intersection[int](bks, re).Size(), re.Size())
+				continue
+			}
+		}
+		count++
+		bks.Add(t)
+		count += s.chain(t, bks)
+	}
+	return count
+}
+
+func (s supportGraph) CountDisintegrate() (int, *set.Set[int]) {
+	var count int
+	ds := set.New[int]()
+	for i, ts := range s.G {
 		var reserve bool
 		for _, t := range ts.List() {
 			if s.reverse[t].Size() == 1 {
@@ -62,15 +92,17 @@ func (s supportGraph) FindHasSupportNode() int {
 			}
 		}
 		if !reserve {
+			ds.Add(i)
 			count++
 		}
 	}
 	for i := range s.reverse {
 		if _, ok := s.G[i]; !ok {
+			ds.Add(i)
 			count++
 		}
 	}
-	return count
+	return count, ds
 }
 
 func (c cube) ToGraph() supportGraph {
@@ -78,6 +110,7 @@ func (c cube) ToGraph() supportGraph {
 		G: make(map[int]*set.Set[int]),
 	}
 	for i := 0; i < len(c.indexes); i++ {
+		sg.G[i] = set.New[int]()
 		for _, p := range c.indexes[i] {
 			pp := grid.XYZVec{
 				X: p.X,
@@ -85,9 +118,6 @@ func (c cube) ToGraph() supportGraph {
 				Z: p.Z + 1,
 			}
 			if _, ok := c.points[pp]; ok && c.points[pp] != i {
-				if _, ok := sg.G[i]; !ok {
-					sg.G[i] = set.New[int]()
-				}
 				sg.G[i].Add(c.points[pp])
 			}
 		}
@@ -223,9 +253,26 @@ func main() {
 		points:  make(map[grid.XYZVec]int),
 		indexes: make(map[int][]grid.XYZVec),
 	}
+	// order by z asc
+	sort.Slice(lines, func(i, j int) bool {
+		return lines[i].from.Z < lines[j].from.Z
+	})
 	for i, l := range lines {
 		c.Drop(i, l)
 	}
-	fmt.Printf("%s\n", c.ToGraph())
-	fmt.Printf("p1:%d\n", c.ToGraph().Reverse().FindHasSupportNode())
+	g := c.ToGraph()
+	// fmt.Printf("%v\n", g)
+	g = g.Reverse()
+	count, d := g.CountDisintegrate()
+	fmt.Printf("p1:%d\n", count)
+	ds := set.New[int]()
+	for i := 0; i < len(lines); i++ {
+		ds.Add(i)
+	}
+	diff := set.Difference[int](ds, d)
+	g.destroys = diff.List()
+	// fmt.Printf("diff: %v\n", diff)
+
+	chain := g.chainDestroy()
+	fmt.Printf("p2:%d\n", chain)
 }
