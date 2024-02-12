@@ -3,7 +3,7 @@ module github.com/scbizu/aoc2023
 go 1.21.1
 
 require (
-	github.com/magejiCoder/magejiAoc v0.0.13
+	github.com/magejiCoder/magejiAoc v0.0.14
 	github.com/magejiCoder/set v0.0.0-20220316024806-489304061977
 	github.com/scbizu/aoc2022 v0.0.0-20230129070201-9efd4d943e02
 )

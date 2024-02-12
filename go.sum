@@ -1,7 +1,7 @@
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/magejiCoder/magejiAoc v0.0.13 h1:uWo8C5oo3FZJXLSDk7vUXYpUZmDaeARnWhtSiYozBac=
-github.com/magejiCoder/magejiAoc v0.0.13/go.mod h1:485NlLWAkaMGbMeo9nmvdtpLwTF9Jh+AWEQDoWk2PwY=
+github.com/magejiCoder/magejiAoc v0.0.14 h1:CcfuzkdkPHlbNm3GNafesodO5d65VRJQ5wqloxzKnnM=
+github.com/magejiCoder/magejiAoc v0.0.14/go.mod h1:485NlLWAkaMGbMeo9nmvdtpLwTF9Jh+AWEQDoWk2PwY=
 github.com/magejiCoder/set v0.0.0-20220316024806-489304061977 h1:Qq500vKWiKKFKCZAqViEqK/N/6oq2RwJa/IDR4y0rn4=
 github.com/magejiCoder/set v0.0.0-20220316024806-489304061977/go.mod h1:eTLqIs7EGJmwj9kN/Rfd27q2dofYTw52JqyewbBdar4=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
